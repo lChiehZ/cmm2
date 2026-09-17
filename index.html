@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> </title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+        body{background:#f8f8f8;color:#222;padding:20px;max-width:720px;margin:0 auto;line-height:1.6}
+        .container{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px #00000010}
+        h1{font-size:24px;margin-bottom:12px;text-align:center}
+        .desc{color:#555;text-align:center;margin-bottom:24px;font-size:16px}
+        .media-item{margin:24px 0}
+        img{width:100%;border-radius:12px;display:block;cursor:pointer;transition:opacity 0.2s;}
+        img:hover{opacity:0.92;}
+        video{width:100%;border-radius:12px}
+        .caption{margin-top:8px;color:#444;font-size:15px}
+        .divider{height:1px;background:#eee;margin:28px 0}
+        .footer{text-align:center;color:#aaa;font-size:14px;margin-top:20px}
+
+        /* 灯箱全屏预览 */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding:16px;
+        }
+        .lightbox img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+        .lightbox.active {
+            display:flex;
+        }
+        .lightbox-close{
+            position:absolute;
+            top:16px;
+            right:20px;
+            color:#fff;
+            font-size:32px;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>「纯妹妹2.0」</h1>
+        <p class="desc">2026巡回演唱会 - 成都站</p>
+        <div id="mediaList"></div>
+        <div class="footer">NFC 一碰阅览 | Github Pages</div>
+    </div>
+
+    <!-- 灯箱容器 -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="大图预览">
+    </div>
+
+<script>
+// ========= 只需要在这里修改，填写assets下的文件 =========
+const mediaList = [
+    // 格式：{type: "img", file:"文件名", text:"图片说明"}
+    {type: "img", file:"photo1.jpg", text:" "},
+    {type: "img", file:"photo2.jpg", text:" "},
+    {type: "img", file:"photo3.jpg", text:" "},
+    {type: "img", file:"photo4.jpg", text:" "},
+    {type: "img", file:"photo5.jpg", text:" "},
+    {type: "img", file:"photo6.jpg", text:" "},
+    {type: "img", file:"photo7.jpg", text:" "},
+    {type: "img", file:"photo8.jpg", text:" "},
+    {type: "img", file:"photo9.jpg", text:" "},
+    {type: "img", file:"photo10.jpg", text:" "},
+    {type: "img", file:"photo11jpg", text:" "},
+    {type: "img", file:"photo12.pg", text:" "},
+    {type: "img", file:"photo13.jpg", text:" "},
+    {type: "img", file:"photo14.jpg", text:" "},
+    {type: "img", file:"photo15.jpg", text:" "},
+    {type: "video", file:"video1.mp4", text:"视频1"}
+];
+// ========================================================
+
+const wrapper = document.getElementById("mediaList");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+const closeBtn = document.querySelector(".lightbox-close");
+
+mediaList.forEach(item=>{
+    const div = document.createElement("div");
+    div.className = "media-item";
+    if(item.type === "img"){
+        const imgSrc = `./assets/${item.file}`;
+        div.innerHTML = `
+            <img src="${imgSrc}" alt="${item.text}" data-src="${imgSrc}">
+            <p class="caption">${item.text}</p>
+            <div class="divider"></div>
+        `
+        // 点击图片唤起灯箱
+        const imgEl = div.querySelector("img");
+        imgEl.onclick = ()=>{
+            lightboxImg.src = imgEl.dataset.src;
+            lightbox.classList.add("active");
+        }
+    }else if(item.type === "video"){
+        div.innerHTML = `
+            <video controls preload="none">
+                <source src="./assets/${item.file}" type="video/mp4">
+                浏览器不支持播放视频
+            </video>
+            <p class="caption">${item.text}</p>
+            <div class="divider"></div>
+        `
+    }
+    wrapper.appendChild(div);
+})
+
+// 关闭灯箱
+closeBtn.onclick = ()=> lightbox.classList.remove("active");
+lightbox.onclick = (e)=>{
+    if(e.target === lightbox) lightbox.classList.remove("active");
+}
+// ESC按键关闭
+document.addEventListener('keydown',(e)=>{
+    if(e.key === 'Escape') lightbox.classList.remove("active");
+})
+</script>
+</body>
+</html>
