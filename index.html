@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>「纯妹妹2.0」</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f6f6f6;
+            color: #222;
+            max-width: 720px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            padding: 24px 20px 16px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 横向滑动相册 */
+        .gallery {
+            position: relative;
+            width: 100%;
+            height: 420px;
+            overflow: hidden;
+            background: #eee;
+            touch-action: pan-y;
+        }
+
+        .track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+            will-change: transform;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e9e9e9;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        /* 骨架加载动画 */
+        .skeleton {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.2s infinite;
+            z-index: 1;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .slide.loaded .skeleton {
+            display: none;
+        }
+
+        /* 左右切换按钮 */
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.65);
+        }
+
+        .nav-btn.left { left: 10px; }
+        .nav-btn.right { right: 10px; }
+
+        /* 分页圆点 */
+        .dots {
+            position: absolute;
+            bottom: 14px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.25s;
+        }
+
+        .dot.active {
+            background: #fff;
+            width: 22px;
+            border-radius: 4px;
+        }
+
+        /* 图片说明 */
+        .caption {
+            margin-top: 12px;
+            padding: 0 20px;
+            color: #444;
+            font-size: 15px;
+            text-align: center;
+            min-height: 22px;
+        }
+
+        /* 视频区域 */
+        .video-section {
+            margin-top: 28px;
+            padding: 0 20px;
+        }
+
+        .video-section h2 {
+            font-size: 17px;
+            margin-bottom: 12px;
+        }
+
+        .video-item {
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 16px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+        }
+
+        .video-caption {
+            margin-top: 10px;
+            color: #444;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 30px;
+        }
+
+        /* 灯箱 */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 6px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            color: #fff;
+            font-size: 34px;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>「纯妹妹2.0」</h1>
+        <p>2026巡回演唱会 - 成都站</p>
+    </div>
+
+    <!-- 横向滑动相册 -->
+    <div class="gallery" id="gallery">
+        <div class="track" id="track"></div>
+
+        <button class="nav-btn left" id="prevBtn">&#10094;</button>
+        <button class="nav-btn right" id="nextBtn">&#10095;</button>
+
+        <div class="dots" id="dots"></div>
+    </div>
+
+    <p class="caption" id="caption"></p>
+
+    <!-- 视频区域 -->
+    <div class="video-section">
+        <h2>视频回忆</h2>
+        <div id="videoList"></div>
+    </div>
+
+    <div class="footer">DD.</div>
+
+    <!-- 灯箱 -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" id="lightboxClose">&times;</span>
+        <img id="lightboxImg" src="" alt="大图预览" />
+    </div>
+
+<script>
+    // ===================== 配置区 =====================
+    // 图片：左右滑动相册
+    const images = [
+        { file: "photo1.jpg", text: " " },
+        { file: "photo2.jpg", text: " " },
+        { file: "photo3.jpg", text: " " },
+        { file: "photo4.jpg", text: " " },
+        { file: "photo5.jpg", text: " " },
+        { file: "photo6.jpg", text: " " },
+        { file: "photo7.jpg", text: " " },
+        { file: "photo8.jpg", text: " " },
+        { file: "photo9.jpg", text: " " },
+        { file: "photo10.jpg", text: " " },
+        { file: "photo11.jpg", text: " " },
+        { file: "photo12.jpg", text: " " },
+        { file: "photo13.jpg", text: " " },
+        { file: "photo14.jpg", text: " " },
+        { file: "photo15.jpg", text: " " },
+    ];
+
+    // 视频：固定列表展示
+    const videos = [
+        { file: "video1.mp4", text: " " },
+    ];
+    // ==================================================
+
+    const track = document.getElementById("track");
+    const dotsBox = document.getElementById("dots");
+    const caption = document.getElementById("caption");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightboxImg");
+    const lightboxClose = document.getElementById("lightboxClose");
+    const videoList = document.getElementById("videoList");
+
+    let currentIndex = 0;
+    let startX = 0;
+    let moveX = 0;
+    let isDragging = false;
+
+    // 渲染图片幻灯片
+    images.forEach((item, index) => {
+        const slide = document.createElement("div");
+        slide.className = "slide";
+
+        slide.innerHTML = `
+            <div class="skeleton"></div>
+            <img src="./assets/${item.file}" alt="${item.text}" />
+        `;
+
+        const img = slide.querySelector("img");
+        img.onload = () => slide.classList.add("loaded");
+        img.onerror = () => slide.classList.add("loaded");
+
+        img.addEventListener("click", () => {
+            lightboxImg.src = `./assets/${item.file}`;
+            lightbox.classList.add("active");
+        });
+
+        track.appendChild(slide);
+
+        const dot = document.createElement("span");
+        dot.className = "dot" + (index === 0 ? " active" : "");
+        dotsBox.appendChild(dot);
+    });
+
+    // 渲染视频列表
+    videos.forEach(item => {
+        const box = document.createElement("div");
+        box.className = "video-item";
+        box.innerHTML = `
+            <video controls preload="none">
+                <source src="./assets/${item.file}" type="video/mp4" />
+                你的浏览器不支持视频播放
+            </video>
+            <p class="video-caption">${item.text}</p>
+        `;
+        videoList.appendChild(box);
+    });
+
+    updateCaption();
+
+    // 切换到指定页
+    function goToIndex(index) {
+        if (index < 0) index = images.length - 1;
+        if (index >= images.length) index = 0;
+        currentIndex = index;
+        track.style.transform = `translateX(-${index * 100}%)`;
+        updateDots();
+        updateCaption();
+    }
+
+    function updateDots() {
+        document.querySelectorAll(".dot").forEach((dot, i) => {
+            dot.classList.toggle("active", i === currentIndex);
+        });
+    }
+
+    function updateCaption() {
+        caption.textContent = images[currentIndex]?.text || "";
+    }
+
+    // 按钮切换
+    prevBtn.addEventListener("click", () => goToIndex(currentIndex - 1));
+    nextBtn.addEventListener("click", () => goToIndex(currentIndex + 1));
+
+    // 触摸滑动
+    track.addEventListener("touchstart", e => {
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        track.style.transition = "none";
+    }, { passive: true });
+
+    track.addEventListener("touchmove", e => {
+        if (!isDragging) return;
+        moveX = e.touches[0].clientX - startX;
+        track.style.transform = `translateX(calc(-${currentIndex * 100}% + ${moveX}px))`;
+    }, { passive: true });
+
+    track.addEventListener("touchend", () => {
+        if (!isDragging) return;
+        isDragging = false;
+        track.style.transition = "";
+
+        if (moveX < -60) goToIndex(currentIndex + 1);
+        else if (moveX > 60) goToIndex(currentIndex - 1);
+        else goToIndex(currentIndex);
+
+        moveX = 0;
+    });
+
+    // 灯箱关闭
+    lightboxClose.addEventListener("click", () => lightbox.classList.remove("active"));
+    lightbox.addEventListener("click", e => {
+        if (e.target === lightbox) lightbox.classList.remove("active");
+    });
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") lightbox.classList.remove("active");
+    });
+</script>
+</body>
+</html>
