@@ -18,11 +18,11 @@
             color: #222;
             max-width: 720px;
             margin: 0 auto;
-            padding-bottom: 40px;
+            padding: 20px 20px 40px;
         }
 
         .header {
-            padding: 24px 20px 16px;
+            padding: 10px 0 16px;
             text-align: center;
         }
 
@@ -34,6 +34,14 @@
         .header p {
             color: #666;
             font-size: 14px;
+        }
+
+        /* 外层卡片容器，圆角，和视频风格统一 */
+        .gallery-wrap {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
 
         /* 横向滑动相册 */
@@ -69,6 +77,7 @@
             object-fit: contain;
             display: block;
             background: #000;
+            pointer-events: none; /* 核心修复：图片不拦截触摸事件，滑动交给外层gallery */
         }
 
         /* 骨架加载动画 */
@@ -146,7 +155,6 @@
         /* 图片说明 */
         .caption {
             margin-top: 12px;
-            padding: 0 20px;
             color: #444;
             font-size: 15px;
             text-align: center;
@@ -156,7 +164,6 @@
         /* 视频区域 */
         .video-section {
             margin-top: 28px;
-            padding: 0 20px;
         }
 
         .video-section h2 {
@@ -166,7 +173,7 @@
 
         .video-item {
             background: #fff;
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 14px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
             margin-bottom: 16px;
@@ -231,14 +238,14 @@
         <p>2026巡回演唱会 - 成都站</p>
     </div>
 
-    <!-- 横向滑动相册 -->
-    <div class="gallery" id="gallery">
-        <div class="track" id="track"></div>
-
-        <button class="nav-btn left" id="prevBtn">&#10094;</button>
-        <button class="nav-btn right" id="nextBtn">&#10095;</button>
-
-        <div class="dots" id="dots"></div>
+    <!-- 相册外层圆角卡片 -->
+    <div class="gallery-wrap">
+        <div class="gallery" id="gallery">
+            <div class="track" id="track"></div>
+            <button class="nav-btn left" id="prevBtn">&#10094;</button>
+            <button class="nav-btn right" id="nextBtn">&#10095;</button>
+            <div class="dots" id="dots"></div>
+        </div>
     </div>
 
     <p class="caption" id="caption"></p>
@@ -289,6 +296,7 @@
     const caption = document.getElementById("caption");
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
+    const galleryEl = document.getElementById("gallery");
     const lightbox = document.getElementById("lightbox");
     const lightboxImg = document.getElementById("lightboxImg");
     const lightboxClose = document.getElementById("lightboxClose");
@@ -313,7 +321,8 @@
         img.onload = () => slide.classList.add("loaded");
         img.onerror = () => slide.classList.add("loaded");
 
-        img.addEventListener("click", () => {
+        // 点击整个slide卡片触发灯箱，不再绑定img
+        slide.addEventListener("click", () => {
             lightboxImg.src = `./assets/${item.file}`;
             lightbox.classList.add("active");
         });
@@ -365,20 +374,20 @@
     prevBtn.addEventListener("click", () => goToIndex(currentIndex - 1));
     nextBtn.addEventListener("click", () => goToIndex(currentIndex + 1));
 
-    // 触摸滑动
-    track.addEventListener("touchstart", e => {
+    // 触摸滑动绑定在gallery外层
+    galleryEl.addEventListener("touchstart", e => {
         isDragging = true;
         startX = e.touches[0].clientX;
         track.style.transition = "none";
     }, { passive: true });
 
-    track.addEventListener("touchmove", e => {
+    galleryEl.addEventListener("touchmove", e => {
         if (!isDragging) return;
         moveX = e.touches[0].clientX - startX;
         track.style.transform = `translateX(calc(-${currentIndex * 100}% + ${moveX}px))`;
     }, { passive: true });
 
-    track.addEventListener("touchend", () => {
+    galleryEl.addEventListener("touchend", () => {
         if (!isDragging) return;
         isDragging = false;
         track.style.transition = "";
